@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Load the CSV file
-data = pd.read_csv(r"C:\Users\yasar\OneDrive\Masaüstü\precipitation_data.csv")
+data = pd.read_csv(r"C:\Users\yasar\work_space\disrubition-and-frequency\data\precipitation_data.csv")
 
 # Folders where graphs and frequency tables will be saved
 graphs_path = "C:\\Users\\yasar\\OneDrive\\Masaüstü\\graps-fre"

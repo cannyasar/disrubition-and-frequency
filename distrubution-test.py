@@ -5,11 +5,10 @@ from scipy.stats import norm, lognorm, gumbel_r
 import os
 
 # Load the CSV file
-data = pd.read_csv(r"C:\Users\yasar\OneDrive\Masaüstü\precipitation_data.csv")
+data = pd.read_csv(r"C:\Users\yasar\work_space\disrubition-and-frequency\data\precipitation_data.csv")
 
-# Directory to save the graphs
-graphs_path = "C:\\Users\\yasar\\OneDrive\\Masaüstü\\graps"
-
+# Directory to save the graphs and results
+graphs_path = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs"
 os.makedirs(graphs_path, exist_ok=True)
 
 # Define the month names
@@ -18,6 +17,9 @@ months = data.columns[1:]  # Assumes the first column contains year information
 # Logarithmic scale ticks
 def get_log_ticks():
     return [0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 98, 99, 99.5, 99.8, 99.9, 99.99]
+
+# Initialize a dictionary to store the results for exporting to Excel
+results = {"Month": [], "Probability (%)": [], "Qp_Normal": [], "Qp_LogNormal": [], "Qp_Gumbel": []}
 
 # Create graphs for each month
 for month in months:
@@ -64,6 +66,13 @@ for month in months:
     qp_normal = np.maximum(qp_normal, 0)
     qp_lognormal = np.maximum(qp_lognormal, 0)
     qp_gumbel = np.maximum(qp_gumbel, 0)
+
+    # Add results to the dictionary
+    results["Month"].extend([month] * len(prob_q))
+    results["Probability (%)"].extend(prob_q * 100)
+    results["Qp_Normal"].extend(qp_normal)
+    results["Qp_LogNormal"].extend(qp_lognormal)
+    results["Qp_Gumbel"].extend(qp_gumbel)
 
     # Normal distribution graph (Y-axis arithmetic)
     fig_normal = go.Figure()
@@ -113,3 +122,9 @@ for month in months:
         fig_gumbel.show()
         file_path_gumbel = os.path.join(graphs_path, f"{month}_gumbel_distribution_plot.html")
         fig_gumbel.write_html(file_path_gumbel)
+
+# Export results to an Excel file
+results_df = pd.DataFrame(results)
+excel_path = os.path.join(graphs_path, "distribution_results.xlsx")
+results_df.to_excel(excel_path, index=False)
+print(f"Results exported to {excel_path}")
