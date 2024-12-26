@@ -8,7 +8,7 @@ import os
 data = pd.read_csv(r"C:\Users\yasar\work_space\disrubition-and-frequency\data\precipitation_data.csv")
 
 # Directory to save the graphs and results
-graphs_path = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs"
+graphs_path = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs\dist-graphs"
 os.makedirs(graphs_path, exist_ok=True)
 
 # Define the month names

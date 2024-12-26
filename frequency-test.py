@@ -7,8 +7,8 @@ import os
 data = pd.read_csv(r"C:\Users\yasar\work_space\disrubition-and-frequency\data\precipitation_data.csv")
 
 # Folders where graphs and frequency tables will be saved
-graphs_path = "C:\\Users\\yasar\\OneDrive\\Masaüstü\\graps-fre"
-tables_path = "C:\\Users\\yasar\\OneDrive\\Masaüstü\\frequency_tables"
+graphs_path = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs\fre-graphs"
+tables_path = r"C:\Users\yasar\work_space\disrubition-and-frequency\tables\fre-table"
 
 
 
