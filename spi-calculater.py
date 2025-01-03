@@ -2,16 +2,6 @@ import pandas as pd
 import numpy as np
 
 def calculate_spi(data, fill_method='mean'):
-    """
-    Calculates the Standardized Precipitation Index (SPI) for a given precipitation data series.
-
-    Args:
-        data (pd.Series): The precipitation data series.
-        fill_method (str, optional): The method to use for filling missing values (NaN). Defaults to 'mean'.
-
-    Returns:
-        pd.Series: The SPI values for the data series.
-    """
 
     # Fill NaN values using the mean
     if fill_method == 'mean':
@@ -32,17 +22,6 @@ def calculate_spi(data, fill_method='mean'):
     return spi
 
 def calculate_spi_for_period(rainfall_data, window, fill_method='mean'):
-    """
-    Calculates SPI for rolling window periods across the precipitation data.
-
-    Args:
-        rainfall_data (pd.DataFrame): The precipitation data DataFrame.
-        window (int): The window size (number of months) for SPI calculation.
-        fill_method (str, optional): The method to use for filling missing values (NaN). Defaults to 'mean'.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing SPI values for each window period.
-    """
 
     spi_values = {}
     months = list(rainfall_data.index)
