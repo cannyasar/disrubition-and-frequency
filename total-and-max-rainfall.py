@@ -36,7 +36,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.legend()
 # Save the maximum rainfall graph as a PNG image
-max_rainfall_graph = r"C:\Users\yasar\work_space\disrubition-and-frequency\max_rainfall_graph.png"
+max_rainfall_graph = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs\total-max-rainfall-graph\max_rainfall_graph.png"
 plt.savefig(max_rainfall_graph)
 plt.show()
 
@@ -50,7 +50,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.legend()
 # Save the total rainfall graph as a PNG image
-total_rainfall_graph = r"C:\Users\yasar\work_space\disrubition-and-frequency\total_rainfall_graph.png"
+total_rainfall_graph = r"C:\Users\yasar\work_space\disrubition-and-frequency\graphs\\total-max-rainfall-graph\total_rainfall_graph.png"
 plt.savefig(total_rainfall_graph)
 plt.show()
 
