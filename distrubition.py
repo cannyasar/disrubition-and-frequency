@@ -1,124 +1,117 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import norm, lognorm, gumbel_r
+import scipy.stats as stats
 
-# Reading the data
+# Load the data
 data = pd.read_csv(r"C:\Users\yasar\work_space\disrubition-and-frequency\data\precipitation_data.csv")
 
-# Calculating total annual rainfall by summing monthly rainfall for each year
-data['Total_Rainfall'] = data.iloc[:, 1:].sum(axis=1)
+# Annual total rainfall (sum of all monthly rainfalls)
+data_annual = data.drop(columns=["Year"]).sum(axis=1)
 
-# Extracting the rainfall data for annual
-rainfall_data = data['Total_Rainfall']
+# Monthly total rainfall
+monthly_rainfalls = data.drop(columns=["Year"]).sum(axis=0)
 
-# Calculating Qmax and 1.5 Qmax
-Q_max = rainfall_data.max()  # Maximum annual rainfall
-Q_max_1_5 = 1.5 * Q_max     # 1.5 times Qmax
+# Maximum rainfall (maximum rainfall value for each year)
+data_maximum = data.drop(columns=["Year"]).max(axis=1)
 
-# Fitting Normal, Log-Normal, and Gumbel distributions to the total annual data
-normal_params = norm.fit(rainfall_data)
-lognormal_params = lognorm.fit(rainfall_data[rainfall_data > 0], floc=0)  # Remove non-positive values
-gumbel_params = gumbel_r.fit(rainfall_data)
+# Determine Qmax and 1.5 Qmax values
+qmax = data_maximum.max()
+qmax_1_5 = 1.5 * qmax
 
-# --- 1) Monthly rainfall for 120-year return period for each distribution ---
-monthly_rainfall_120_years = []
-for month in data.columns[1:]:
-    monthly_data = data[month]
-    
-    # Replace zero or negative values with a small positive value (e.g., 1e-6)
-    monthly_data = monthly_data.replace(0, 1e-6)
-    monthly_data[monthly_data < 0] = 1e-6  # Replace negatives with a small value
-    
-    # Fit distributions for the specific month
-    month_normal_params = norm.fit(monthly_data)
-    month_lognormal_params = lognorm.fit(monthly_data, floc=0)
-    month_gumbel_params = gumbel_r.fit(monthly_data)
-    
-    # Calculate 120-year return period rainfall for each distribution
-    monthly_rainfall_120_years.append({
-        'Month': month,
-        'Normal': norm.ppf(1 - 1/120, *month_normal_params),
-        'Log-Normal': lognorm.ppf(1 - 1/120, *month_lognormal_params),
-        'Gumbel': gumbel_r.ppf(1 - 1/120, *month_gumbel_params)
-    })
+# Writing to Excel
+with pd.ExcelWriter(r"C:\Users\yasar\work_space\disrubition-and-frequency\tables\distrubition\precipitation_analysis.xlsx") as writer:
 
-# Convert to DataFrame for monthly rainfall
-monthly_rainfall_df = pd.DataFrame(monthly_rainfall_120_years)
+    # Normal Distribution Simulation
+    mu_normal, std_normal = stats.norm.fit(data_annual)
+    normal_monthly_rainfall = stats.norm.rvs(loc=mu_normal, scale=std_normal, size=(12, 1000)).mean(axis=1)
+    normal_annual_rainfall = normal_monthly_rainfall.sum()
+    normal_max_rainfall = normal_monthly_rainfall.max()
 
-# --- 2) Total annual rainfall for 120-year return period for each distribution ---
-percentile_120_years_normal = norm.ppf(1 - 1/120, *normal_params)
-percentile_120_years_lognormal = lognorm.ppf(1 - 1/120, *lognormal_params)
-percentile_120_years_gumbel = gumbel_r.ppf(1 - 1/120, *gumbel_params)
+    # 1.5 Qmax for Normal Distribution
+    p_qmax_normal = stats.norm.cdf(qmax_1_5, loc=mu_normal, scale=std_normal)
+    return_period_qmax_normal = 1 / (1 - p_qmax_normal)
 
-total_annual_rainfall_120_years = {
-    'Normal': percentile_120_years_normal,
-    'Log-Normal': percentile_120_years_lognormal,
-    'Gumbel': percentile_120_years_gumbel
-}
+    # Writing data to Excel
+    normal_df = pd.DataFrame({
+        'January': normal_monthly_rainfall[0],
+        'February': normal_monthly_rainfall[1],
+        'March': normal_monthly_rainfall[2],
+        'April': normal_monthly_rainfall[3],
+        'May': normal_monthly_rainfall[4],
+        'June': normal_monthly_rainfall[5],
+        'July': normal_monthly_rainfall[6],
+        'August': normal_monthly_rainfall[7],
+        'September': normal_monthly_rainfall[8],
+        'October': normal_monthly_rainfall[9],
+        'November': normal_monthly_rainfall[10],
+        'December': normal_monthly_rainfall[11],
+        'Total Annual Rainfall': normal_annual_rainfall,
+        'Maximum Rainfall': normal_max_rainfall,
+        '1.5 Qmax Return Period (years)': return_period_qmax_normal
+    }, index=["Normal Distribution"])
 
-# --- 3) Total maximum rainfall (Qmax) for each distribution ---
-total_max_rainfall_normal = Q_max  # Use Q_max for the maximum rainfall
-total_max_rainfall_lognormal = Q_max
-total_max_rainfall_gumbel = Q_max
+    normal_df.to_excel(writer, sheet_name='Normal Distribution')
 
-total_max_rainfall = {
-    'Normal': total_max_rainfall_normal,
-    'Log-Normal': total_max_rainfall_lognormal,
-    'Gumbel': total_max_rainfall_gumbel
-}
+    # LogNormal Distribution Simulation
+    shape, loc, scale = stats.lognorm.fit(data_annual, floc=0)
+    lognormal_monthly_rainfall = stats.lognorm.rvs(shape, loc, scale, size=(12, 1000)).mean(axis=1)
+    lognormal_annual_rainfall = lognormal_monthly_rainfall.sum()
+    lognormal_max_rainfall = lognormal_monthly_rainfall.max()
 
-# --- 1.5 Qmax Calculation ---
-# Calculate 1.5 Qmax return period values for monthly, annual and max rainfall
+    # 1.5 Qmax for LogNormal Distribution
+    p_qmax_lognormal = stats.lognorm.cdf(qmax_1_5, shape, loc, scale)
+    return_period_qmax_lognormal = 1 / (1 - p_qmax_lognormal)
 
-# --- 4) Monthly rainfall for 1.5 Qmax return period for each distribution ---
-monthly_rainfall_1_5_Qmax = []
-for month in data.columns[1:]:
-    monthly_data = data[month]
-    
-    # Replace zero or negative values with a small positive value (e.g., 1e-6)
-    monthly_data = monthly_data.replace(0, 1e-6)
-    monthly_data[monthly_data < 0] = 1e-6  # Replace negatives with a small value
-    
-    # Fit distributions for the specific month
-    month_normal_params = norm.fit(monthly_data)
-    month_lognormal_params = lognorm.fit(monthly_data, floc=0)
-    month_gumbel_params = gumbel_r.fit(monthly_data)
-    
-    # Calculate 1.5 Qmax return period rainfall for each distribution
-    monthly_rainfall_1_5_Qmax.append({
-        'Month': month,
-        'Normal': norm.ppf(1 - 1/(1 - norm.cdf(Q_max_1_5, *month_normal_params)), *month_normal_params),
-        'Log-Normal': lognorm.ppf(1 - 1/(1 - lognorm.cdf(Q_max_1_5, *month_lognormal_params)), *month_lognormal_params),
-        'Gumbel': gumbel_r.ppf(1 - 1/(1 - gumbel_r.cdf(Q_max_1_5, *month_gumbel_params)), *month_gumbel_params)
-    })
+    # Writing data to Excel
+    lognormal_df = pd.DataFrame({
+        'January': lognormal_monthly_rainfall[0],
+        'February': lognormal_monthly_rainfall[1],
+        'March': lognormal_monthly_rainfall[2],
+        'April': lognormal_monthly_rainfall[3],
+        'May': lognormal_monthly_rainfall[4],
+        'June': lognormal_monthly_rainfall[5],
+        'July': lognormal_monthly_rainfall[6],
+        'August': lognormal_monthly_rainfall[7],
+        'September': lognormal_monthly_rainfall[8],
+        'October': lognormal_monthly_rainfall[9],
+        'November': lognormal_monthly_rainfall[10],
+        'December': lognormal_monthly_rainfall[11],
+        'Total Annual Rainfall': lognormal_annual_rainfall,
+        'Maximum Rainfall': lognormal_max_rainfall,
+        '1.5 Qmax Return Period (years)': return_period_qmax_lognormal
+    }, index=["LogNormal Distribution"])
 
-# Convert to DataFrame for 1.5 Qmax monthly rainfall
-monthly_rainfall_1_5_Qmax_df = pd.DataFrame(monthly_rainfall_1_5_Qmax)
+    lognormal_df.to_excel(writer, sheet_name='LogNormal Distribution')
 
-# --- 5) Total annual rainfall for 1.5 Qmax return period for each distribution ---
-total_annual_rainfall_1_5_Qmax = {
-    'Normal': norm.ppf(1 - 1/(1 - norm.cdf(Q_max_1_5, *normal_params)), *normal_params),
-    'Log-Normal': lognorm.ppf(1 - 1/(1 - lognorm.cdf(Q_max_1_5, *lognormal_params)), *lognormal_params),
-    'Gumbel': gumbel_r.ppf(1 - 1/(1 - gumbel_r.cdf(Q_max_1_5, *gumbel_params)), *gumbel_params)
-}
+    # Gumbel Distribution Simulation
+    params = stats.gumbel_r.fit(data_annual)
+    gumbel_monthly_rainfall = stats.gumbel_r.rvs(*params, size=(12, 1000)).mean(axis=1)
+    gumbel_annual_rainfall = gumbel_monthly_rainfall.sum()
+    gumbel_max_rainfall = gumbel_monthly_rainfall.max()
 
-# --- 6) Total maximum rainfall (Qmax 1.5) for each distribution ---
-total_max_rainfall_1_5_Qmax = {
-    'Normal': Q_max_1_5,
-    'Log-Normal': Q_max_1_5,
-    'Gumbel': Q_max_1_5
-}
+    # 1.5 Qmax for Gumbel Distribution
+    p_qmax_gumbel = stats.gumbel_r.cdf(qmax_1_5, *params)
+    return_period_qmax_gumbel = 1 / (1 - p_qmax_gumbel)
 
-# Writing results to Excel
-with pd.ExcelWriter(r"C:\Users\yasar\work_space\disrubition-and-frequency\tables\distrubition\rainfall_distribution_results.xlsx") as writer:
-    # --- 120 Year Return Period ---
-    monthly_rainfall_df.to_excel(writer, sheet_name="120_Year_Monthly", index=False)
-    pd.DataFrame([total_annual_rainfall_120_years]).to_excel(writer, sheet_name="120_Year_Annual", index=False)
-    pd.DataFrame([total_max_rainfall]).to_excel(writer, sheet_name="120_Year_Total_Max_Rainfall", index=False)
+    # Writing data to Excel
+    gumbel_df = pd.DataFrame({
+        'January': gumbel_monthly_rainfall[0],
+        'February': gumbel_monthly_rainfall[1],
+        'March': gumbel_monthly_rainfall[2],
+        'April': gumbel_monthly_rainfall[3],
+        'May': gumbel_monthly_rainfall[4],
+        'June': gumbel_monthly_rainfall[5],
+        'July': gumbel_monthly_rainfall[6],
+        'August': gumbel_monthly_rainfall[7],
+        'September': gumbel_monthly_rainfall[8],
+        'October': gumbel_monthly_rainfall[9],
+        'November': gumbel_monthly_rainfall[10],
+        'December': gumbel_monthly_rainfall[11],
+        'Total Annual Rainfall': gumbel_annual_rainfall,
+        'Maximum Rainfall': gumbel_max_rainfall,
+        '1.5 Qmax Return Period (years)': return_period_qmax_gumbel
+    }, index=["Gumbel Distribution"])
 
-    # --- 1.5 Qmax ---
-    monthly_rainfall_1_5_Qmax_df.to_excel(writer, sheet_name="1_5_Qmax_Monthly", index=False)
-    pd.DataFrame([total_annual_rainfall_1_5_Qmax]).to_excel(writer, sheet_name="1_5_Qmax_Annual", index=False)
-    pd.DataFrame([total_max_rainfall_1_5_Qmax]).to_excel(writer, sheet_name="Total_Max_Rainfall_1_5_Qmax", index=False)
+    gumbel_df.to_excel(writer, sheet_name='Gumbel Distribution')
 
-print("The results have been written to the Excel file.")
+    print("Data has been successfully saved to the Excel file.")
