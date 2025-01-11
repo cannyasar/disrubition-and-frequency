@@ -90,29 +90,30 @@ categories = {
 output_dir = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\spi-graph"
 os.makedirs(output_dir, exist_ok=True)
 
-# Create SPI plots
-methods = ["log-normal", "normal", "gumbel"]
-
-# Example plot for a period (same plot for all methods)
-def plot_spi_comparison(df, column, title, file_name, x_axis_label="Year", y_axis_label="SPI"):
+# Combine SPI plots
+def plot_combined_spi(totals_list, group_names, method, title, file_name, x_axis_label="Year", y_axis_label="SPI"):
     fig = go.Figure()
 
-    for method in methods:
+    # Add SPI data for each group to the figure
+    for i, df in enumerate(totals_list):
+        group_name = group_names[i]
         fig.add_trace(go.Bar(
             x=df["Year"],
             y=df[f"SPI ({method})"],
-            name=f"{method.capitalize()}"
+            name=group_name
         ))
 
+    # Add drought category lines
     for category, value in categories.items():
         fig.add_trace(go.Scatter(
-            x=df["Year"],
-            y=[value] * len(df["Year"]),
+            x=totals_list[0]["Year"],
+            y=[value] * len(totals_list[0]["Year"]),
             mode="lines",
             line=dict(dash="dot"),
             name=category
         ))
 
+    # Update layout
     fig.update_layout(
         title=title,
         xaxis_title=x_axis_label,
@@ -124,25 +125,59 @@ def plot_spi_comparison(df, column, title, file_name, x_axis_label="Year", y_axi
     # Save the figure as HTML
     fig.write_html(os.path.join(output_dir, f"{file_name}.html"))
 
-# 1-Month SPI plots
-for i, df in enumerate(one_month_totals):
-    month_name = one_month_groups[i][0]
-    plot_spi_comparison(df, "1-Month Total", f"1-Month SPI ({month_name})", f"1-Month_SPI_{month_name}")
+# Group names for labeling
+one_month_group_names = [g[0] for g in one_month_groups]
+three_month_group_names = ["-".join(g) for g in three_month_groups]
+six_month_group_names = ["-".join(g) for g in six_month_groups]
+ten_month_group_names = ["-".join(g) for g in ten_month_group]
+twelve_month_group_names = ["-".join(g) for g in twelve_month_group]
 
-# 3-Month SPI plots
-for i, df in enumerate(three_month_totals):
-    months = ", ".join(three_month_groups[i])
-    plot_spi_comparison(df, "3-Month Total", f"3-Month SPI ({months})", f"3-Month_SPI_{months.replace(', ', '_')}")
+# Define methods for SPI calculation
+methods = ["log-normal", "normal", "gumbel"]
 
-# 6-Month SPI plots
-for i, df in enumerate(six_month_totals):
-    months = ", ".join(six_month_groups[i])
-    plot_spi_comparison(df, "6-Month Total", f"6-Month SPI ({months})", f"6-Month_SPI_{months.replace(', ', '_')}")
+# Plot for each method
+for method in methods:
+    # Combine 1-Month SPI data
+    plot_combined_spi(
+        one_month_totals,
+        one_month_group_names,
+        method,
+        f"1-Month SPI Comparison ({method.capitalize()})",
+        f"1-Month_SPI_Comparison_{method}"
+    )
 
-# 10-Month SPI plot
-months = ", ".join(ten_month_group[0])
-plot_spi_comparison(ten_month_totals[0], "10-Month Total", f"10-Month SPI ({months})", f"10-Month_SPI_{months.replace(', ', '_')}")
+    # Combine 3-Month SPI data
+    plot_combined_spi(
+        three_month_totals,
+        three_month_group_names,
+        method,
+        f"3-Month SPI Comparison ({method.capitalize()})",
+        f"3-Month_SPI_Comparison_{method}"
+    )
 
-# 12-Month SPI plot
-months = ", ".join(twelve_month_group[0])
-plot_spi_comparison(twelve_month_totals[0], "12-Month Total", f"12-Month SPI ({months})", f"12-Month_SPI_{months.replace(', ', '_')}")
+    # Combine 6-Month SPI data
+    plot_combined_spi(
+        six_month_totals,
+        six_month_group_names,
+        method,
+        f"6-Month SPI Comparison ({method.capitalize()})",
+        f"6-Month_SPI_Comparison_{method}"
+    )
+
+    # Combine 10-Month SPI data (only one group here)
+    plot_combined_spi(
+        [ten_month_totals[0]],
+        ten_month_group_names,
+        method,
+        f"10-Month SPI Comparison ({method.capitalize()})",
+        f"10-Month_SPI_Comparison_{method}"
+    )
+
+    # Combine 12-Month SPI data (only one group here)
+    plot_combined_spi(
+        [twelve_month_totals[0]],
+        twelve_month_group_names,
+        method,
+        f"12-Month SPI Comparison ({method.capitalize()})",
+        f"12-Month_SPI_Comparison_{method}"
+    )
