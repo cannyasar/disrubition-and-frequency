@@ -8,13 +8,13 @@ def validate_frequencies(data, histogram, cumulative_freq, label):
     hist_sum = histogram.sum()
     cumulative_sum = cumulative_freq[-1]
     normalized_cumulative = cumulative_freq / hist_sum
-    
+
     print(f"Validating: {label}")
     print(f"  Total Observations: {total_count}")
     print(f"  Histogram Total Frequency: {hist_sum} (Expected: {total_count})")
     print(f"  Cumulative Frequency Total: {cumulative_sum} (Should match Histogram Total)")
     print(f"  Normalized Cumulative Frequency Max: {normalized_cumulative[-1]} (Should be 1.0)")
-    
+
     if hist_sum != total_count:
         print(f"  ERROR: Histogram total frequency does not match the total observations!")
         return False
@@ -27,6 +27,16 @@ def validate_frequencies(data, histogram, cumulative_freq, label):
     print("Validation Complete.\n")
     return True
 
+# Boş sınıfları kontrol eden fonksiyon
+def check_empty_bins(hist, bins, label):
+    empty_bins = np.where(hist == 0)[0]
+    result = {
+        "Label": label,
+        "Empty_Bins_Count": len(empty_bins),
+        "Empty_Bins_Ranges": [(bins[idx], bins[idx + 1]) for idx in empty_bins]
+    }
+    return result
+
 # Veriyi yükleme
 file_path = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\data\\precipitation_data.csv"
 data = pd.read_csv(file_path)
@@ -38,11 +48,15 @@ monthly_data = data.iloc[:, 1:]
 data['Total_Annual_Rainfall'] = monthly_data.sum(axis=1)
 data['Max_Annual_Rainfall'] = monthly_data.max(axis=1)
 
-# Log dönüşümü
-log_total_rainfall = np.log10(data['Total_Annual_Rainfall'][data['Total_Annual_Rainfall'] > 0])
-log_max_rainfall = np.log10(data['Max_Annual_Rainfall'][data['Max_Annual_Rainfall'] > 0])
+# Log dönüşümü için 0 olan değerleri 0.01 olarak ayarla
+data['Total_Annual_Rainfall'] = data['Total_Annual_Rainfall'].apply(lambda x: x if x > 0 else 0.01)
+data['Max_Annual_Rainfall'] = data['Max_Annual_Rainfall'].apply(lambda x: x if x > 0 else 0.01)
 
-# Histogram sınıfları
+# Log dönüşümü
+log_total_rainfall = np.log10(data['Total_Annual_Rainfall'])
+log_max_rainfall = np.log10(data['Max_Annual_Rainfall'])
+
+# Histogram sınıfları (20 sınıf)
 bins_total_normal = np.linspace(data['Total_Annual_Rainfall'].min(), data['Total_Annual_Rainfall'].max(), 21)
 bins_total_log = np.linspace(log_total_rainfall.min(), log_total_rainfall.max(), 21)
 
@@ -62,6 +76,20 @@ cumulative_total_log = np.cumsum(hist_total_log)
 
 cumulative_max_normal = np.cumsum(hist_max_normal)
 cumulative_max_log = np.cumsum(hist_max_log)
+
+# Boş sınıf kontrolü
+empty_bins_total_normal = check_empty_bins(hist_total_normal, bin_edges_total_normal, "Total Annual Rainfall (Normal)")
+empty_bins_total_log = check_empty_bins(hist_total_log, bin_edges_total_log, "Total Annual Rainfall (Log)")
+
+empty_bins_max_normal = check_empty_bins(hist_max_normal, bin_edges_max_normal, "Max Annual Rainfall (Normal)")
+empty_bins_max_log = check_empty_bins(hist_max_log, bin_edges_max_log, "Max Annual Rainfall (Log)")
+
+# Boş sınıfların sonuçlarını raporlama
+print("\n--- Empty Bins Analysis ---")
+print(empty_bins_total_normal)
+print(empty_bins_total_log)
+print(empty_bins_max_normal)
+print(empty_bins_max_log)
 
 # Doğrulamalar
 valid_total_normal = validate_frequencies(data['Total_Annual_Rainfall'], hist_total_normal, cumulative_total_normal, "Total Annual Rainfall (Normal)")
@@ -150,7 +178,7 @@ if valid_total_normal and valid_total_log:
     )
 
     # Kaydetme
-    output_path_total = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\total-max-frequency\\rainfall-total-normal-log-comparison.html"
+    output_path_total = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-total-normal-log-comparison.html"
     fig_total.write_html(output_path_total)
     print(f"Total rainfall graph saved at: {output_path_total}")
 
@@ -234,9 +262,10 @@ if valid_max_normal and valid_max_log:
     )
 
     # Kaydetme
-    output_path_max = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\total-max-frequency\\rainfall-max-normal-log-comparison.html"
+    output_path_max = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-max-normal-log-comparison.html"
     fig_max.write_html(output_path_max)
     print(f"Max rainfall graph saved at: {output_path_max}")
 
-    fig_max.show()
     fig_total.show()
+    fig_max.show()
+
