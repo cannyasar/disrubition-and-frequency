@@ -58,8 +58,8 @@ def plot_distribution(month, sorted_data, probabilities, x_fit, cdf_fit, method_
         xaxis_title="Probability (%)",
         yaxis_title="Rainfall (kg/m²)",
         template="plotly_white",
-        xaxis=dict(title="Probability (%)"),
-        yaxis=dict(title="Rainfall (kg/m²)")
+        xaxis=dict(type= 'log' , title="Probability (%)"),
+        yaxis=dict( type= 'log', title="Rainfall (kg/m²)")
     )
 
     # Save plot as HTML
