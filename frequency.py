@@ -178,7 +178,7 @@ if valid_total_normal and valid_total_log:
     )
 
     # Saving the graph
-    output_path_total = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-total-normal-log-comparison.html"
+    output_path_total = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\frequency-graphs\\rainfall-total-normal-log-comparison.html"
     fig_total.write_html(output_path_total)
     print(f"Total rainfall graph saved at: {output_path_total}")
 
@@ -262,7 +262,7 @@ if valid_max_normal and valid_max_log:
     )
 
     # Saving the graph
-    output_path_max = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-max-normal-log-comparison.html"
+    output_path_max = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\frequency-graphs\\rainfall-max-normal-log-comparison.html"
     fig_max.write_html(output_path_max)
     print(f"Max rainfall graph saved at: {output_path_max}")
 
