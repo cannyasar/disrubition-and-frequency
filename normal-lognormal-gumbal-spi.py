@@ -181,3 +181,23 @@ for method in methods:
         f"12-Month SPI Comparison ({method.capitalize()})",
         f"12-Month_SPI_Comparison_{method}"
     )
+
+# Method to save SPI data to CSV
+def save_spi_to_csv(totals_list, file_name_prefix):
+    """
+    Saves the SPI data from totals_list to CSV files.
+    
+    :param totals_list: List of dataframes containing SPI data.
+    :param file_name_prefix: Prefix for the output CSV file names.
+    """
+    for i, df in enumerate(totals_list):
+        file_name = f"{file_name_prefix}_Group_{i+1}.csv"
+        df.to_csv(file_name, index=False)
+        print(f"Saved: {file_name}")
+
+# Saving SPI data for log-normal and normal groups
+save_spi_to_csv(one_month_totals, "1-Month_SPI")
+save_spi_to_csv(three_month_totals, "3-Month_SPI")
+save_spi_to_csv(six_month_totals, "6-Month_SPI")
+save_spi_to_csv([ten_month_totals[0]], "10-Month_SPI")
+save_spi_to_csv([twelve_month_totals[0]], "12-Month_SPI")
