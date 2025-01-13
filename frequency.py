@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-# Frekans ve kümülatif frekans doğrulama fonksiyonu
+# Frequency and cumulative frequency validation function
 def validate_frequencies(data, histogram, cumulative_freq, label):
     total_count = len(data)
     hist_sum = histogram.sum()
@@ -27,7 +27,7 @@ def validate_frequencies(data, histogram, cumulative_freq, label):
     print("Validation Complete.\n")
     return True
 
-# Boş sınıfları kontrol eden fonksiyon
+# Function to check for empty bins
 def check_empty_bins(hist, bins, label):
     empty_bins = np.where(hist == 0)[0]
     result = {
@@ -37,72 +37,72 @@ def check_empty_bins(hist, bins, label):
     }
     return result
 
-# Veriyi yükleme
+# Loading data
 file_path = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\data\\precipitation_data.csv"
 data = pd.read_csv(file_path)
 
-# Sadece aylık yağış sütunlarını seçme (ilk sütun "Year" ise hariç tut)
+# Selecting only the monthly precipitation columns (excluding the first column "Year" if it exists)
 monthly_data = data.iloc[:, 1:]
 
-# Yıllık toplam yağışları ve maksimum yıllık yağışları hesaplama
+# Calculating total annual rainfall and maximum annual rainfall
 data['Total_Annual_Rainfall'] = monthly_data.sum(axis=1)
 data['Max_Annual_Rainfall'] = monthly_data.max(axis=1)
 
-# Log dönüşümü için 0 olan değerleri 0.01 olarak ayarla
+# Setting values of 0 to 0.01 for log transformation
 data['Total_Annual_Rainfall'] = data['Total_Annual_Rainfall'].apply(lambda x: x if x > 0 else 0.01)
 data['Max_Annual_Rainfall'] = data['Max_Annual_Rainfall'].apply(lambda x: x if x > 0 else 0.01)
 
-# Log dönüşümü
+# Log transformation
 log_total_rainfall = np.log10(data['Total_Annual_Rainfall'])
 log_max_rainfall = np.log10(data['Max_Annual_Rainfall'])
 
-# Histogram sınıfları (20 sınıf)
+# Histogram bins (20 bins)
 bins_total_normal = np.linspace(data['Total_Annual_Rainfall'].min(), data['Total_Annual_Rainfall'].max(), 21)
 bins_total_log = np.linspace(log_total_rainfall.min(), log_total_rainfall.max(), 21)
 
 bins_max_normal = np.linspace(data['Max_Annual_Rainfall'].min(), data['Max_Annual_Rainfall'].max(), 21)
 bins_max_log = np.linspace(log_max_rainfall.min(), log_max_rainfall.max(), 21)
 
-# Frekans hesaplama
+# Frequency calculation
 hist_total_normal, bin_edges_total_normal = np.histogram(data['Total_Annual_Rainfall'], bins=bins_total_normal)
 hist_total_log, bin_edges_total_log = np.histogram(log_total_rainfall, bins=bins_total_log)
 
 hist_max_normal, bin_edges_max_normal = np.histogram(data['Max_Annual_Rainfall'], bins=bins_max_normal)
 hist_max_log, bin_edges_max_log = np.histogram(log_max_rainfall, bins=bins_max_log)
 
-# Kümülatif frekans hesaplama
+# Cumulative frequency calculation
 cumulative_total_normal = np.cumsum(hist_total_normal)
 cumulative_total_log = np.cumsum(hist_total_log)
 
 cumulative_max_normal = np.cumsum(hist_max_normal)
 cumulative_max_log = np.cumsum(hist_max_log)
 
-# Boş sınıf kontrolü
+# Checking for empty bins
 empty_bins_total_normal = check_empty_bins(hist_total_normal, bin_edges_total_normal, "Total Annual Rainfall (Normal)")
 empty_bins_total_log = check_empty_bins(hist_total_log, bin_edges_total_log, "Total Annual Rainfall (Log)")
 
 empty_bins_max_normal = check_empty_bins(hist_max_normal, bin_edges_max_normal, "Max Annual Rainfall (Normal)")
 empty_bins_max_log = check_empty_bins(hist_max_log, bin_edges_max_log, "Max Annual Rainfall (Log)")
 
-# Boş sınıfların sonuçlarını raporlama
+# Reporting the results of empty bin analysis
 print("\n--- Empty Bins Analysis ---")
 print(empty_bins_total_normal)
 print(empty_bins_total_log)
 print(empty_bins_max_normal)
 print(empty_bins_max_log)
 
-# Doğrulamalar
+# Validations
 valid_total_normal = validate_frequencies(data['Total_Annual_Rainfall'], hist_total_normal, cumulative_total_normal, "Total Annual Rainfall (Normal)")
 valid_total_log = validate_frequencies(log_total_rainfall, hist_total_log, cumulative_total_log, "Total Annual Rainfall (Log)")
 valid_max_normal = validate_frequencies(data['Max_Annual_Rainfall'], hist_max_normal, cumulative_max_normal, "Max Annual Rainfall (Normal)")
 valid_max_log = validate_frequencies(log_max_rainfall, hist_max_log, cumulative_max_log, "Max Annual Rainfall (Log)")
 
-# Grafikleri oluşturma ve kaydetme
+# Creating and saving graphs
 if valid_total_normal and valid_total_log:
-    # Toplam yıllık yağış grafiği
+    # Graph for total annual rainfall
     fig_total = go.Figure()
 
-    # Normal değerler için histogram (Total)
+    # Histogram for normal values (Total)
     fig_total.add_trace(go.Bar(
         x=bin_edges_total_normal[:-1],
         y=hist_total_normal,
@@ -113,7 +113,7 @@ if valid_total_normal and valid_total_log:
         yaxis='y1'
     ))
 
-    # Log değerler için histogram (Total)
+    # Histogram for log values (Total)
     fig_total.add_trace(go.Bar(
         x=bin_edges_total_log[:-1],
         y=hist_total_log,
@@ -124,7 +124,7 @@ if valid_total_normal and valid_total_log:
         yaxis='y2'
     ))
 
-    # Normal değerler için kümülatif frekans (Total)
+    # Cumulative frequency for normal values (Total)
     fig_total.add_trace(go.Scatter(
         x=np.repeat(bin_edges_total_normal, 2)[1:-1],
         y=np.repeat(cumulative_total_normal, 2),
@@ -135,7 +135,7 @@ if valid_total_normal and valid_total_log:
         yaxis='y1'
     ))
 
-    # Log değerler için kümülatif frekans (Total)
+    # Cumulative frequency for log values (Total)
     fig_total.add_trace(go.Scatter(
         x=np.repeat(bin_edges_total_log, 2)[1:-1],
         y=np.repeat(cumulative_total_log, 2),
@@ -146,7 +146,7 @@ if valid_total_normal and valid_total_log:
         yaxis='y2'
     ))
 
-    # Ekseni düzenleme
+    # Axis settings
     fig_total.update_layout(
         title="Total Annual Rainfall: Normal and Log Comparisons",
         xaxis=dict(
@@ -177,16 +177,16 @@ if valid_total_normal and valid_total_log:
         template='plotly_white'
     )
 
-    # Kaydetme
+    # Saving the graph
     output_path_total = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-total-normal-log-comparison.html"
     fig_total.write_html(output_path_total)
     print(f"Total rainfall graph saved at: {output_path_total}")
 
 if valid_max_normal and valid_max_log:
-    # Maksimum yıllık yağış grafiği
+    # Graph for maximum annual rainfall
     fig_max = go.Figure()
 
-    # Normal değerler için histogram (Max)
+    # Histogram for normal values (Max)
     fig_max.add_trace(go.Bar(
         x=bin_edges_max_normal[:-1],
         y=hist_max_normal,
@@ -197,7 +197,7 @@ if valid_max_normal and valid_max_log:
         yaxis='y1'
     ))
 
-    # Log değerler için histogram (Max)
+    # Histogram for log values (Max)
     fig_max.add_trace(go.Bar(
         x=bin_edges_max_log[:-1],
         y=hist_max_log,
@@ -208,7 +208,7 @@ if valid_max_normal and valid_max_log:
         yaxis='y2'
     ))
 
-    # Normal değerler için kümülatif frekans (Max)
+    # Cumulative frequency for normal values (Max)
     fig_max.add_trace(go.Scatter(
         x=np.repeat(bin_edges_max_normal, 2)[1:-1],
         y=np.repeat(cumulative_max_normal, 2),
@@ -219,7 +219,7 @@ if valid_max_normal and valid_max_log:
         yaxis='y1'
     ))
 
-    # Log değerler için kümülatif frekans (Max)
+    # Cumulative frequency for log values (Max)
     fig_max.add_trace(go.Scatter(
         x=np.repeat(bin_edges_max_log, 2)[1:-1],
         y=np.repeat(cumulative_max_log, 2),
@@ -230,7 +230,7 @@ if valid_max_normal and valid_max_log:
         yaxis='y2'
     ))
 
-    # Ekseni düzenleme
+    # Axis settings
     fig_max.update_layout(
         title="Max Annual Rainfall: Normal and Log Comparisons",
         xaxis=dict(
@@ -261,11 +261,10 @@ if valid_max_normal and valid_max_log:
         template='plotly_white'
     )
 
-    # Kaydetme
+    # Saving the graph
     output_path_max = r"C:\\Users\\yasar\\work_space\\disrubition-and-frequency\\graphs\\rainfall-max-normal-log-comparison.html"
     fig_max.write_html(output_path_max)
     print(f"Max rainfall graph saved at: {output_path_max}")
 
     fig_total.show()
     fig_max.show()
-
